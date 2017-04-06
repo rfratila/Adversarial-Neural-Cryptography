@@ -4,7 +4,7 @@ from datagen import get_plain_text
 import numpy as np
 
 class Model:
-    def __init__(self,bit_count, input_net = None, AB = True,training = True):
+    def __init__(self,bit_count, input_net = None, concatenate_key= False, AB = True,training = True):
         '''
         Meant to hold onto the network object
         Arguments:
@@ -14,8 +14,10 @@ class Model:
         '''
         self.AB = AB
         self.name = 'Alice_Bob' if self.AB else 'Eve'
-        self.input_length = 2*bit_count if self.AB else bit_count
+        self.input_length = bit_count
         self.trainable = training
+        self.concatenate_key = concatenate_key
+        self.con_key = tf.placeholder(dtype = tf.float32, shape=(None,bit_count,1))
         self.input_layer = tf.placeholder(dtype = tf.float32, shape=(None,self.input_length,1)) if input_net is None else input_net
         self.network = self.create_network()
 
@@ -24,6 +26,9 @@ class Model:
         self.strides = [1,2,1,1] if self.AB else [1,1,1,1]
         #Create a 2N x 2N deep dense layer for Alice/Bob and N x 2N if Eve 
         self.dense_depth = self.input_length-1 if self.AB else (2*self.input_length)-1
+
+        if self.concatenate_key:
+            self.input_layer = tf.concat([self.con_key,self.input_layer],axis=1)
 
         #Dense layers for mixing the plaintext
         self.dense_layers = tf.layers.dense(inputs=self.input_layer,
@@ -76,38 +81,36 @@ def main():
 
     print ('Generating random plaintexts and key...')
     messages = get_plain_text(N=num_bits,to_generate=batch)
-    AB_key = get_key(N=num_bits)
-
-    m_with_key = [np.concatenate((AB_key[0],messages[i])) for i in range(batch)]
-
+    AB_key = get_key(N=num_bits, batch = batch)
+    
     #Inputs are [batch_size, image_width, image_height, channels]
-    train_X = np.expand_dims(m_with_key,axis = 2) #prep for passing into network of size (batch,num_bits,1)
-    y = np.expand_dims(messages,axis = 2)
+    train_X = np.expand_dims(messages,axis = 2) #prep for passing into network of size (batch,num_bits,1)
+    keys = np.expand_dims(AB_key,axis = 2)
 
     orig = tf.placeholder(dtype = tf.float32, shape=(None,num_bits,1))
 
     print ('Creating Alice net...')
-    alice_net = Model(bit_count=num_bits,AB = True,training=True)
+    alice_net = Model(bit_count=num_bits,concatenate_key= True, AB = True,training=True)
     print ('Creating Bob net...')
-    bob_net = Model(bit_count=num_bits, input_net = alice_net.network, AB = True,training=True)
+    bob_net = Model(bit_count=num_bits, input_net = alice_net.network, concatenate_key= True, AB = True,training=True)
     print ('Creating Eve net...')
     eve_net = Model(bit_count=num_bits, input_net = alice_net.network, AB = False,training=True)
-
-    loss = tf.reduce_mean(tf.abs(tf.subtract(orig,eve_net.network)))
-    train_step = tf.train.AdamOptimizer(learning_rate=0.0008).minimize(loss)
+    
+    #loss = tf.reduce_mean(tf.abs(tf.subtract(orig,eve_net.network)))
+    #train_step = tf.train.AdamOptimizer(learning_rate=0.0008).minimize(loss)
 
     with tf.Session() as sess:
         tf.global_variables_initializer().run()
         import pudb; pu.db
-        alice_out = sess.run(alice_net.network, feed_dict={alice_net.input_layer: train_X})
+        alice_out = sess.run(alice_net.network, feed_dict={alice_net.input_layer: train_X,
+                                                            alice_net.con_key: keys})
+
         eve_out = sess.run(eve_net.network, feed_dict={alice_net.input_layer: train_X})
-        bob_out = sess.run(bob_net.network, feed_dict={alice_net.input_layer: train_X})
+
+        bob_out = sess.run(bob_net.network, feed_dict={alice_net.input_layer: train_X,
+                                                        bob_net.con_key: bob_keys})
         #train_bob = 
-        sess.run(train_step, feed_dict={alice_net.input_layer: train_X,orig: y})
-        print (train_X.shape)
-        print (a.shape)
-        print (train_X[0])
-        print (a[0])
+        sess.run(train_step, feed_dict={alice_net.input_layer: train_X,orig: train_X})
 
 if __name__ == "__main__":
     main()
