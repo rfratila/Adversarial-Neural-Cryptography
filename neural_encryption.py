@@ -87,9 +87,9 @@ def main():
     print ('Creating Alice net...')
     alice_net = Model(bit_count=num_bits,AB = True,training=True)
     print ('Creating Bob net...')
-    bob_net = Model(bit_count=num_bits,AB = True,training=True)
+    bob_net = Model(bit_count=num_bits, input_net = alice_net.network, AB = True,training=True)
     print ('Creating Eve net...')
-    eve_net = Model(bit_count=num_bits,input_net = alice_net.network, AB = False,training=True)
+    eve_net = Model(bit_count=num_bits, input_net = alice_net.network, AB = False,training=True)
 
     loss = tf.reduce_mean(tf.abs(tf.subtract(orig,eve_net.network)))
     train_step = tf.train.AdamOptimizer(learning_rate=0.0008).minimize(loss)
