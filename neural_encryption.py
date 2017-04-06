@@ -99,8 +99,13 @@ def main():
     print ('Creating Eve net...')
     eve_net = Model(bit_count=num_bits, input_net = alice_net.network, AB = False,training=True)
     
+    #Eves reconstruction error
     eve_loss = tf.reduce_sum(tf.abs(tf.subtract(orig,eve_net.network)))
+
+    #Bobs reconstruction error
     bob_reconst =  tf.reduce_sum(tf.abs(tf.subtract(orig,bob_net.network)))
+
+    #Bobs ability to still decode while eve can't
     bob_eve = tf.divide(tf.square(tf.subtract(bob_net.input_length/2, eve_loss)), tf.square(bob_net.input_length/2))
 
     bob_fancy_loss = bob_reconst - bob_eve # not explicitly mentioned in the paper
@@ -124,7 +129,7 @@ def main():
                                                         alice_net.con_key: keys,
                                                         bob_net.con_key: keys})
         
-        for i in range(0,10):
+        for i in range(0,100):
             print ('Iteration: ',i)
 
             sess.run(train_AB, feed_dict={alice_net.input_layer: train_X,
@@ -144,7 +149,7 @@ def main():
                                             bob_net.con_key: keys,
                                             orig: train_X})
 
-            print ("Eve error: {} | Bob error: {}".format(eve_error, bob_error))
+            print ("    Eve reconstruction error: {} | Bob reconstruction error: {}".format(eve_error, bob_error))
 
             #get more messages
             messages = get_plain_text(N=num_bits,to_generate=batch)
