@@ -66,7 +66,9 @@ class Model:
                                     padding='same',
                                     activation=tf.tanh,
                                     trainable = self.trainable)
-        return self.conv4
+
+        self.output = tf.sign(tf.sign(self.conv4) + tf.ones_like(self.conv4) / 10)
+        return self.output
 
 def main():
     num_bits = 16
@@ -97,7 +99,10 @@ def main():
     with tf.Session() as sess:
         tf.global_variables_initializer().run()
         import pudb; pu.db
-        a = sess.run(alice_net.network, feed_dict={alice_net.input_layer: train_X})
+        alice_out = sess.run(alice_net.network, feed_dict={alice_net.input_layer: train_X})
+        eve_out = sess.run(eve_net.network, feed_dict={alice_net.input_layer: train_X})
+        bob_out = sess.run(bob_net.network, feed_dict={alice_net.input_layer: train_X})
+        #train_bob = 
         sess.run(train_step, feed_dict={alice_net.input_layer: train_X,orig: y})
         print (train_X.shape)
         print (a.shape)
