@@ -99,12 +99,16 @@ def main():
     print ('Creating Eve net...')
     eve_net = Model(bit_count=num_bits, input_net = alice_net.network, AB = False,training=True)
     
-    #loss = tf.reduce_mean(tf.abs(tf.subtract(orig,eve_net.network)))
-    #train_step = tf.train.AdamOptimizer(learning_rate=0.0008).minimize(loss)
+    eve_loss = tf.reduce_sum(tf.abs(tf.subtract(orig,eve_net.network)))
+    bob_reconst =  tf.reduce_sum(tf.abs(tf.subtract(orig,bob_net.network)))
+    bob_eve = tf.divide(tf.square(tf.subtract(bob_net.input_length/2, eve_loss)), tf.square(bob_net.input_length/2))
+
+    train_step = tf.train.AdamOptimizer(learning_rate=0.0008).minimize(eve_loss)
 
     with tf.Session() as sess:
         tf.global_variables_initializer().run()
-        import pudb; pu.db
+        #tf.initialize_all_variables()
+        
         alice_out = sess.run(alice_net.network, feed_dict={alice_net.input_layer: train_X,
                                                             alice_net.con_key: keys})
 
@@ -114,8 +118,10 @@ def main():
         bob_out = sess.run(bob_net.network, feed_dict={alice_net.input_layer: train_X,
                                                         alice_net.con_key: keys,
                                                         bob_net.con_key: keys})
-        #train_bob = 
-        sess.run(train_step, feed_dict={alice_net.input_layer: train_X,orig: train_X})
+        import pudb; pu.db
+        sess.run(train_step, feed_dict={alice_net.input_layer: train_X,
+                                        alice_net.con_key: keys,
+                                        orig: train_X})
 
 if __name__ == "__main__":
     main()
