@@ -13,7 +13,7 @@ class Model:
             training: if you want the weights to be trainable
         '''
         self.AB = AB
-        self.name = 'Alice_Bob' if AB else 'Eve'
+        self.name = 'Alice_Bob' if self.AB else 'Eve'
         self.input_length = 2*bit_count if AB else bit_count
         self.trainable = training
         self.input_layer = tf.placeholder(dtype = tf.float32, shape=(None,self.input_length,1))
