@@ -130,7 +130,7 @@ def main():
                                             alice_net.con_key: keys,
                                             bob_net.con_key: keys,
                                             orig: train_X})
-            error = sess.run(total_loss, feed_dict={alice_net.input_layer: train_X,
+            eve_error = sess.run(eve_loss, feed_dict={alice_net.input_layer: train_X,
                                             alice_net.con_key: keys,
                                             bob_net.con_key: keys,
                                             orig: train_X})
