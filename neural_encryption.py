@@ -70,21 +70,25 @@ def main():
     num_bits = 16
     batch = 1000
 
-    print ('Generating plain text and key...')
+    print ('Generating random plaintexts and key...')
     messages = get_plain_text(N=num_bits,to_generate=batch)
     AB_key = get_key(N=num_bits)
 
     m_with_key = [np.concatenate((AB_key[0],messages[i])) for i in range(batch)]
 
     #Inputs are [batch_size, image_width, image_height, channels]
-    train_X = np.expand_dims(m_with_key,axis = 2) #prep for passing into network
+    train_X = np.expand_dims(m_with_key,axis = 2) #prep for passing into network of size (batch,num_bits,1)
 
-    AB_net = Model(bit_count=num_bits,AB = True,training=True)
-    E_net = Model(bit_count=num_bits,AB = False,training=True)
+    print ('Creating Alice net...')
+    alice_net = Model(bit_count=num_bits,AB = True,training=True)
+    print ('Creating Bob net...')
+    bob_net = Model(bit_count=num_bits,AB = True,training=True)
+    print ('Creating Eve net...')
+    e_net = Model(bit_count=num_bits,AB = False,training=True)
 
     with tf.Session() as sess:
         tf.global_variables_initializer().run()
-        a = sess.run(AB_net.network, feed_dict={AB_net.input_layer: train_X})
+        a = sess.run(alice_net.network, feed_dict={alice_net.input_layer: train_X})
         print (train_X.shape)
         print (a.shape)
         print (train_X[0])
