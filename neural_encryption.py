@@ -17,7 +17,8 @@ class Model:
         self.input_length = bit_count
         self.trainable = training
         self.concatenate_key = concatenate_key
-        self.con_key = tf.placeholder(dtype = tf.float32, shape=(None,bit_count,1))
+        if self.concatenate_key:
+            self.con_key = tf.placeholder(dtype = tf.float32, shape=(None,bit_count,1))
         self.input_layer = tf.placeholder(dtype = tf.float32, shape=(None,self.input_length,1)) if input_net is None else input_net
         self.network = self.create_network()
 
@@ -107,9 +108,11 @@ def main():
         alice_out = sess.run(alice_net.network, feed_dict={alice_net.input_layer: train_X,
                                                             alice_net.con_key: keys})
 
-        eve_out = sess.run(eve_net.network, feed_dict={alice_net.input_layer: train_X})
+        eve_out = sess.run(eve_net.network, feed_dict={alice_net.input_layer: train_X,
+                                                        alice_net.con_key: keys})
 
         bob_out = sess.run(bob_net.network, feed_dict={alice_net.input_layer: train_X,
+                                                        alice_net.con_key: keys,
                                                         bob_net.con_key: keys})
         #train_bob = 
         sess.run(train_step, feed_dict={alice_net.input_layer: train_X,orig: train_X})
