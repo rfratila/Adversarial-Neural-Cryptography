@@ -107,7 +107,8 @@ def main():
 
     total_loss = bob_reconst - eve_loss
 
-    train_step = tf.train.AdamOptimizer(learning_rate=0.0008).minimize(total_loss)
+    train_AB = tf.train.AdamOptimizer(learning_rate=0.0008).minimize(total_loss)
+    train_eve = tf.train.AdamOptimizer(learning_rate=0.0008).minimize(eve_loss)
 
     with tf.Session() as sess:
         tf.global_variables_initializer().run()
@@ -126,15 +127,24 @@ def main():
         for i in range(0,10):
             print ('Iteration: ',i)
 
-            sess.run(train_step, feed_dict={alice_net.input_layer: train_X,
+            sess.run(train_AB, feed_dict={alice_net.input_layer: train_X,
                                             alice_net.con_key: keys,
                                             bob_net.con_key: keys,
                                             orig: train_X})
+            sess.run(train_eve, feed_dict={alice_net.input_layer: train_X,
+                                            alice_net.con_key: keys,
+                                            orig: train_X})
+
             eve_error = sess.run(eve_loss, feed_dict={alice_net.input_layer: train_X,
                                             alice_net.con_key: keys,
                                             bob_net.con_key: keys,
                                             orig: train_X})
-            print ('Total error: ', error)
+            bob_error = sess.run(bob_reconst, feed_dict={alice_net.input_layer: train_X,
+                                            alice_net.con_key: keys,
+                                            bob_net.con_key: keys,
+                                            orig: train_X})
+
+            print ("Eve error: {} | Bob error: {}".format(eve_error, bob_error))
 
             #get more messages
             messages = get_plain_text(N=num_bits,to_generate=batch)
