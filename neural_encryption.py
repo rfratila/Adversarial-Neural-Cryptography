@@ -28,10 +28,12 @@ class Model:
         self.dense_depth = self.input_length-1 if self.AB else (2*self.input_length)-1
 
         if self.concatenate_key:
-            self.input_layer = tf.concat([self.con_key,self.input_layer],axis=1)
+            self.con_input_layer = tf.concat([self.con_key,self.input_layer],axis=1)
+        else:
+            self.con_input_layer = self.input_layer
 
         #Dense layers for mixing the plaintext
-        self.dense_layers = tf.layers.dense(inputs=self.input_layer,
+        self.dense_layers = tf.layers.dense(inputs=self.con_input_layer,
                                             units=self.input_length,
                                             trainable = self.trainable)
 
@@ -108,7 +110,7 @@ def main():
         eve_out = sess.run(eve_net.network, feed_dict={alice_net.input_layer: train_X})
 
         bob_out = sess.run(bob_net.network, feed_dict={alice_net.input_layer: train_X,
-                                                        bob_net.con_key: bob_keys})
+                                                        bob_net.con_key: keys})
         #train_bob = 
         sess.run(train_step, feed_dict={alice_net.input_layer: train_X,orig: train_X})
 
