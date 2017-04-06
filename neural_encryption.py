@@ -4,7 +4,7 @@ from datagen import get_plain_text
 import numpy as np
 
 class Model:
-    def __init__(self,bit_count,AB = True,training = True):
+    def __init__(self,bit_count, input_net = None, AB = True,training = True):
         '''
         Meant to hold onto the network object
         Arguments:
@@ -17,6 +17,8 @@ class Model:
         self.input_length = 2*bit_count if self.AB else bit_count
         self.trainable = training
         self.input_layer = tf.placeholder(dtype = tf.float32, shape=(None,self.input_length,1))
+        if input_net is not None:
+            self.input_layer = input_net
         self.network = self.create_network()
 
     def create_network(self):
@@ -89,9 +91,9 @@ def main():
     print ('Creating Bob net...')
     bob_net = Model(bit_count=num_bits,AB = True,training=True)
     print ('Creating Eve net...')
-    eve_net = Model(bit_count=num_bits,AB = False,training=True)
+    eve_net = Model(bit_count=num_bits,input_net = alice_net, AB = False,training=True)
 
-    loss = tf.reduce_mean(tf.abs(tf.subtract(orig,alice_net.network)))
+    loss = tf.reduce_mean(tf.abs(tf.subtract(orig,eve_network)))
     train_step = tf.train.AdamOptimizer(learning_rate=0.0008).minimize(loss)
 
     with tf.Session() as sess:
