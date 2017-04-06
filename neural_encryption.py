@@ -80,7 +80,7 @@ class Model:
 
 def main():
     num_bits = 16
-    batch = 1000
+    batch = 4096
 
     print ('Generating random plaintexts and key...')
     messages = get_plain_text(N=num_bits,to_generate=batch)
@@ -103,7 +103,11 @@ def main():
     bob_reconst =  tf.reduce_sum(tf.abs(tf.subtract(orig,bob_net.network)))
     bob_eve = tf.divide(tf.square(tf.subtract(bob_net.input_length/2, eve_loss)), tf.square(bob_net.input_length/2))
 
-    train_step = tf.train.AdamOptimizer(learning_rate=0.0008).minimize(eve_loss)
+    bob_fancy_loss = bob_reconst - bob_eve # not explicitly mentioned in the paper
+
+    total_loss = bob_reconst - eve_loss
+
+    train_step = tf.train.AdamOptimizer(learning_rate=0.0008).minimize(total_loss)
 
     with tf.Session() as sess:
         tf.global_variables_initializer().run()
@@ -118,10 +122,24 @@ def main():
         bob_out = sess.run(bob_net.network, feed_dict={alice_net.input_layer: train_X,
                                                         alice_net.con_key: keys,
                                                         bob_net.con_key: keys})
-        import pudb; pu.db
-        sess.run(train_step, feed_dict={alice_net.input_layer: train_X,
-                                        alice_net.con_key: keys,
-                                        orig: train_X})
+        
+        for i in range(0,10):
+            print ('Iteration: ',i)
+
+            sess.run(train_step, feed_dict={alice_net.input_layer: train_X,
+                                            alice_net.con_key: keys,
+                                            bob_net.con_key: keys,
+                                            orig: train_X})
+            error = sess.run(total_loss, feed_dict={alice_net.input_layer: train_X,
+                                            alice_net.con_key: keys,
+                                            bob_net.con_key: keys,
+                                            orig: train_X})
+            print ('Total error: ', error)
+
+            #get more messages
+            messages = get_plain_text(N=num_bits,to_generate=batch)
+            train_X = np.expand_dims(messages,axis = 2)
+        
 
 if __name__ == "__main__":
     main()
