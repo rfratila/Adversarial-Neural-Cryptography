@@ -33,7 +33,7 @@ class Model:
         self.network = self.create_network()
 
     def create_network(self):
-        with tf.variable_scope(self.name, reuse=True):
+        with tf.variable_scope(self.name):
 
             self.strides = [1, 2, 1, 1] if self.AB else [1, 1, 1, 1]
             # Create a 2N x 2N deep dense layer for Alice/Bob and N x 2N if Eve
@@ -158,7 +158,7 @@ def main():
 
     AB_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, "Alice_Bob")
     train_AB = tf.train.AdamOptimizer(learning_rate=0.0008).minimize(
-        total_loss, var_list=AB_varsB)
+        total_loss, var_list=AB_vars)
 
     E_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, "Eve")
     train_eve = tf.train.AdamOptimizer(learning_rate=0.0008).minimize(
