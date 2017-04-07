@@ -6,6 +6,7 @@ from session_manager import load_session
 import numpy as np
 from collections import OrderedDict
 import pickle
+import time
 
 class Model:
     def __init__(self, bit_count, name, input_net=None, concatenate_key=False,
@@ -54,17 +55,18 @@ class Model:
             # Dense layers for mixing the plaintext
             self.dense_layers = tf.layers.dense(
                 inputs=self.con_input_layer,
-                units=self.input_length,
+                units= 2* self.input_length,
+                activation=tf.nn.relu,
                 trainable=self.trainable
             )
-
+            '''
             for i in range(0, self.dense_depth):
                 self.dense_layers = tf.layers.dense(
                     inputs=self.dense_layers,
                     units=self.input_length,
                     trainable=self.trainable
                 )
-
+            '''
             # Four conv layers for transforming the ciphertext
             self.conv1 = tf.layers.conv1d(
                 inputs=self.dense_layers,
@@ -72,7 +74,7 @@ class Model:
                 strides=self.strides[0],
                 kernel_size=[4],
                 padding='same',
-                activation=tf.sigmoid,
+                activation=tf.nn.relu,
                 trainable=self.trainable
             )
 
@@ -82,7 +84,7 @@ class Model:
                 strides=self.strides[1],
                 kernel_size=[2],
                 padding='same',
-                activation=tf.sigmoid,
+                activation=tf.nn.relu,
                 trainable=self.trainable
             )
 
@@ -92,7 +94,7 @@ class Model:
                 strides=self.strides[2],
                 kernel_size=[1],
                 padding='same',
-                activation=tf.sigmoid,
+                activation=tf.nn.relu,
                 trainable=self.trainable
             )
 
@@ -114,7 +116,8 @@ class Model:
 
 def main():
     num_bits = 16
-    batch = 4096
+    batch = 512
+    max_iter = 1000
 
     data_collected = OrderedDict(iteration=[],eve_error=[],bob_error=[])
 
@@ -147,19 +150,19 @@ def main():
     )
 
     # Eves reconstruction error
-    eve_loss = tf.reduce_sum(tf.abs(tf.subtract(orig, eve_net.network)))
+    eve_loss = tf.reduce_mean(tf.abs(tf.subtract(orig, eve_net.network)))
 
     # Bobs reconstruction error
-    bob_reconst = tf.reduce_sum(tf.abs(tf.subtract(orig, bob_net.network)))
+    bob_reconst = tf.reduce_mean(tf.abs(tf.subtract(orig, bob_net.network)))
 
     # Bobs ability to still decode while eve can't
     bob_eve = tf.divide(
-        tf.square(tf.subtract(bob_net.input_length/2, eve_loss)),
-        tf.square(bob_net.input_length/2)
+        tf.square(tf.subtract(bob_net.input_length/2.0, eve_loss)),
+        tf.square(bob_net.input_length/2.0)
     )
 
-    bob_fancy_loss = bob_reconst - bob_eve  # not explicitly mentioned in the paper
-    total_loss = bob_reconst - eve_loss
+    bob_loss = bob_reconst + bob_eve  # not explicitly mentioned in the paper
+    #total_loss = bob_reconst - eve_loss
 
     AB_vars = (
         tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, "Alice") + 
@@ -167,7 +170,7 @@ def main():
     )
 
     train_AB = tf.train.AdamOptimizer(learning_rate=0.0008).minimize(
-        total_loss, var_list=AB_vars)
+        bob_loss, var_list=AB_vars)
 
     E_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, "Eve")
     train_eve = tf.train.AdamOptimizer(learning_rate=0.0008).minimize(
@@ -193,42 +196,48 @@ def main():
         }
 
         bob_out = sess.run(bob_net.network, feed_dict=feed_dict)
+        
+        for i in range(0, 90):
+            print('\nIteration:', i)
+            start_time = time.time()
+            print("\tTraining Alice and Bob for {} iterations...".format(max_iter))
+            for i in range(0,max_iter):
+                feed_dict_AB = {
+                    alice_net.input_layer: train_X,
+                    alice_net.con_key: keys,
+                    bob_net.con_key: keys,
+                    orig: train_X
+                }
 
-        for i in range(0, 10000):
-            print('Iteration:', i)
+                sess.run(train_AB, feed_dict=feed_dict_AB)
+                messages = get_plain_text(N=num_bits, to_generate=batch)
+                train_X = np.expand_dims(messages, axis=2)
+            print("\tTraining eve for {} iterations...".format(max_iter))
+            for i in range(0,max_iter):
+                feed_dict_E = {
+                    alice_net.input_layer: train_X,
+                    alice_net.con_key: keys,
+                    orig: train_X
+                }
 
-            feed_dict_AB = {
-                alice_net.input_layer: train_X,
-                alice_net.con_key: keys,
-                bob_net.con_key: keys,
-                orig: train_X
-            }
-
-            sess.run(train_AB, feed_dict=feed_dict_AB)
-
-            feed_dict_E = {
-                alice_net.input_layer: train_X,
-                alice_net.con_key: keys,
-                orig: train_X
-            }
-
-            sess.run(train_eve, feed_dict=feed_dict_E)
+                sess.run(train_eve, feed_dict=feed_dict_E)
+                messages = get_plain_text(N=num_bits, to_generate=batch)
+                train_X = np.expand_dims(messages, axis=2)
 
             eve_error = sess.run(eve_loss, feed_dict=feed_dict_E)
             bob_error = sess.run(bob_reconst, feed_dict=feed_dict_AB)
 
-            print("    Eve reconstruction error: {} | Bob reconstruction error: {}".format(eve_error, bob_error))
+            print("\tEve recon error: {0:.4f} | Bob recon error: {1:.4f} | Time taken: {2:.2f}s".format(eve_error, bob_error, time.time() - start_time))
             data_collected['iteration'].append(i)
             data_collected['eve_error'].append(eve_error)
             data_collected['bob_error'].append(bob_error)
 
             # get more messages
-            messages = get_plain_text(N=num_bits, to_generate=batch)
-            train_X = np.expand_dims(messages, axis=2)
+            
 
-        save_session(sess,'A_B_E_10000')
+        save_session(sess,'A_newB_E_90')
     
-    with open('bob_and_eve.pickle','wb') as output:
+    with open('bob_and_eve2.pickle','wb') as output:
         pickle.dump(data_collected,output)
     
     import pudb; pu.db
