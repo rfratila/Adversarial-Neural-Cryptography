@@ -15,7 +15,7 @@ class Model:
             training: if you want the weights to be trainable
         '''
         self.AB = AB
-        self.name = 'Alice_Bob' if self.AB else 'Eve'
+        self.name = name
         self.input_length = bit_count
         self.trainable = training
         self.concatenate_key = concatenate_key
@@ -33,7 +33,7 @@ class Model:
         self.network = self.create_network()
 
     def create_network(self):
-        with tf.variable_scope(self.name, reuse=True):
+        with tf.variable_scope(self.name):
 
             self.strides = [1, 2, 1, 1] if self.AB else [1, 1, 1, 1]
             # Create a 2N x 2N deep dense layer for Alice/Bob and N x 2N if Eve
@@ -156,7 +156,8 @@ def main():
     bob_fancy_loss = bob_reconst - bob_eve  # not explicitly mentioned in the paper
     total_loss = bob_reconst - eve_loss
 
-    AB_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, "Alice_Bob")
+    AB_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, "Alice") + tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, "Bob") 
+
     train_AB = tf.train.AdamOptimizer(learning_rate=0.0008).minimize(
         total_loss, var_list=AB_vars)
 
