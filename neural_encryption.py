@@ -112,12 +112,33 @@ class Model:
                 tf.sign(self.conv4) + tf.ones_like(self.conv4) / 10)
 
             return self.output
+    def get_output(self, sess, encoder_net, train_X, keys):
+        '''
+        Will return the output of the network given some input as a numpy array
+        Args:
+            sess: the tf.Session var where the models are running in
+            encoder_net: the highest network in the hierarchical structure (i.e alice_net)
+            train_X: the messages in the shape of (batch, N, 1)
+            keys: if keys are meant to be concatenated, they should be passed in the shape (batch, N, 1)
+        '''
+        if self.concatenate_key:
+            feed_dict = {
+                encoder_net.input_layer: train_X,
+                encoder_net.con_key: keys,
+                self.con_key: keys 
+            }
+        else:
+            feed_dict = {
+                encoder_net.input_layer: train_X,
+                encoder_net.con_key: keys
+            }
+        return sess.run(self.network, feed_dict=feed_dict)
 
 
 def main():
     num_bits = 16
     batch = 512
-    max_iter = 1000
+    max_iter = 10
 
     data_collected = OrderedDict(iteration=[],eve_error=[],bob_error=[])
 
@@ -180,28 +201,18 @@ def main():
         tf.global_variables_initializer().run()
         # tf.initialize_all_variables()
 
-        feed_dict = {
-            alice_net.input_layer: train_X,
-            alice_net.con_key: keys
-        }
-
-        alice_out = sess.run(alice_net.network, feed_dict=feed_dict)
-
-        eve_out = sess.run(eve_net.network, feed_dict=feed_dict)
-
-        feed_dict = {
-            alice_net.input_layer: train_X,
-            alice_net.con_key: keys,
-            bob_net.con_key: keys
-        }
-
-        bob_out = sess.run(bob_net.network, feed_dict=feed_dict)
-        
+        '''
+        #Use to get the output of all the networks
+        alice_out = alice_net.get_output(sess=sess, encoder_net = alice_net, train_X=train_X, keys = keys)
+        eve_out = eve_net.get_output(sess=sess, encoder_net = alice_net, train_X=train_X, keys = keys)
+        bob_out = bob_net.get_output(sess=sess, encoder_net = alice_net, train_X=train_X, keys = keys)
+        '''
+     
         for i in range(0, 90):
             print('\nIteration:', i)
             start_time = time.time()
             print("\tTraining Alice and Bob for {} iterations...".format(max_iter))
-            for i in range(0,max_iter):
+            for j in range(0,max_iter):
                 feed_dict_AB = {
                     alice_net.input_layer: train_X,
                     alice_net.con_key: keys,
@@ -212,8 +223,9 @@ def main():
                 sess.run(train_AB, feed_dict=feed_dict_AB)
                 messages = get_plain_text(N=num_bits, to_generate=batch)
                 train_X = np.expand_dims(messages, axis=2)
+            
             print("\tTraining eve for {} iterations...".format(max_iter))
-            for i in range(0,max_iter):
+            for j in range(0,max_iter):
                 feed_dict_E = {
                     alice_net.input_layer: train_X,
                     alice_net.con_key: keys,
@@ -226,7 +238,7 @@ def main():
 
             eve_error = sess.run(eve_loss, feed_dict=feed_dict_E)
             bob_error = sess.run(bob_reconst, feed_dict=feed_dict_AB)
-
+            
             print("\tEve recon error: {0:.4f} | Bob recon error: {1:.4f} | Time taken: {2:.2f}s".format(eve_error, bob_error, time.time() - start_time))
             data_collected['iteration'].append(i)
             data_collected['eve_error'].append(eve_error)
