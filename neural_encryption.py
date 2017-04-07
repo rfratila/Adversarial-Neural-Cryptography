@@ -15,7 +15,7 @@ class Model:
             training: if you want the weights to be trainable
         '''
         self.AB = AB
-        self.name = name
+        self.name = 'Alice_Bob' if self.AB else 'Eve'
         self.input_length = bit_count
         self.trainable = training
         self.concatenate_key = concatenate_key
@@ -33,7 +33,7 @@ class Model:
         self.network = self.create_network()
 
     def create_network(self):
-        with tf.variable_scope(self.name):
+        with tf.variable_scope(self.name, reuse=True):
 
             self.strides = [1, 2, 1, 1] if self.AB else [1, 1, 1, 1]
             # Create a 2N x 2N deep dense layer for Alice/Bob and N x 2N if Eve
