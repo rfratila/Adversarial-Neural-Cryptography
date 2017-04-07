@@ -170,11 +170,11 @@ def main():
     )
 
     train_AB = tf.train.AdamOptimizer(learning_rate=0.0008).minimize(
-        bob_loss, var_list=AB_vars)
+        bob_loss, var_list=AB_vars) #paper learning rate = 0.0008
 
     E_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, "Eve")
     train_eve = tf.train.AdamOptimizer(learning_rate=0.0008).minimize(
-        eve_loss, var_list=E_vars)
+        eve_loss, var_list=E_vars) #paper learning rate = 0.0008
 
     with tf.Session() as sess:
         tf.global_variables_initializer().run()
