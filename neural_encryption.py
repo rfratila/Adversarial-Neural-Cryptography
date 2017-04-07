@@ -209,7 +209,7 @@ def main():
         bob_out = bob_net.get_output(sess=sess, encoder_net = alice_net, train_X=train_X, keys = keys)
         '''
      
-        for i in range(0, 50):
+        for i in range(0, 360):
             print('\nIteration:', i)
             start_time = time.time()
 
@@ -252,9 +252,9 @@ def main():
             # get more messages
             
         
-        save_session(sess,'A_newB_E_90')
+        save_session(sess,'A_B_E_3')
     
-    with open('bob_and_eve2.pickle','wb') as output:
+    with open('bob_and_eve3.pickle','wb') as output:
         pickle.dump(data_collected,output)
     import pudb; pu.db
     
