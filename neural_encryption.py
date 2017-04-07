@@ -1,8 +1,11 @@
 import tensorflow as tf
 from datagen import get_key
 from datagen import get_plain_text
+from session_manager import save_session
+from session_manager import load_session
 import numpy as np
-
+from collections import OrderedDict
+import pickle
 
 class Model:
     def __init__(self, bit_count, name, input_net=None, concatenate_key=False,
@@ -113,6 +116,8 @@ def main():
     num_bits = 16
     batch = 4096
 
+    data_collected = OrderedDict(iteration=[],eve_error=[],bob_error=[])
+
     print('Generating random plaintexts and key...')
     messages = get_plain_text(N=num_bits, to_generate=batch)
     AB_key = get_key(N=num_bits, batch=batch)
@@ -189,7 +194,7 @@ def main():
 
         bob_out = sess.run(bob_net.network, feed_dict=feed_dict)
 
-        for i in range(0, 100):
+        for i in range(0, 10000):
             print('Iteration:', i)
 
             feed_dict_AB = {
@@ -213,10 +218,20 @@ def main():
             bob_error = sess.run(bob_reconst, feed_dict=feed_dict_AB)
 
             print("    Eve reconstruction error: {} | Bob reconstruction error: {}".format(eve_error, bob_error))
+            data_collected['iteration'].append(i)
+            data_collected['eve_error'].append(eve_error)
+            data_collected['bob_error'].append(bob_error)
 
             # get more messages
             messages = get_plain_text(N=num_bits, to_generate=batch)
             train_X = np.expand_dims(messages, axis=2)
+
+        save_session(sess,'A_B_E_10000')
+    
+    with open('bob_and_eve.pickle','wb') as output:
+        pickle.dump(data_collected,output)
+    
+    import pudb; pu.db
 
 
 if __name__ == "__main__":

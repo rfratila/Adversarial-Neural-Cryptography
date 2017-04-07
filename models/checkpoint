@@ -1,0 +1,2 @@
+model_checkpoint_path: "/home/rfratila/Desktop/Adversarial-Neural-Cryptography/models/ABE.ckpt"
+all_model_checkpoint_paths: "/home/rfratila/Desktop/Adversarial-Neural-Cryptography/models/ABE.ckpt"
