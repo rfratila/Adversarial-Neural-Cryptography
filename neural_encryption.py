@@ -156,7 +156,10 @@ def main():
     bob_fancy_loss = bob_reconst - bob_eve  # not explicitly mentioned in the paper
     total_loss = bob_reconst - eve_loss
 
-    AB_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, "Alice") + tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, "Bob") 
+    AB_vars = (
+        tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, "Alice") + 
+        tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, "Bob") 
+    )
 
     train_AB = tf.train.AdamOptimizer(learning_rate=0.0008).minimize(
         total_loss, var_list=AB_vars)
