@@ -5,7 +5,7 @@ import numpy as np
 
 
 class Model:
-    def __init__(self, bit_count, input_net=None, concatenate_key=False,
+    def __init__(self, bit_count, name, input_net=None, concatenate_key=False,
                  AB=True, training=True):
         '''
         Meant to hold onto the network object
@@ -15,7 +15,7 @@ class Model:
             training: if you want the weights to be trainable
         '''
         self.AB = AB
-        self.name = 'Alice_Bob' if self.AB else 'Eve'
+        self.name = name
         self.input_length = bit_count
         self.trainable = training
         self.concatenate_key = concatenate_key
@@ -33,7 +33,7 @@ class Model:
         self.network = self.create_network()
 
     def create_network(self):
-        with tf.variable_scope(self.name):
+        with tf.variable_scope(self.name, reuse=True):
 
             self.strides = [1, 2, 1, 1] if self.AB else [1, 1, 1, 1]
             # Create a 2N x 2N deep dense layer for Alice/Bob and N x 2N if Eve
@@ -125,19 +125,19 @@ def main():
 
     print('Creating Alice net...')
     alice_net = Model(
-        bit_count=num_bits, concatenate_key=True,
+        bit_count=num_bits, name = 'Alice', concatenate_key=True,
         AB=True, training=True
     )
 
     print('Creating Bob net...')
     bob_net = Model(
-        bit_count=num_bits, input_net=alice_net.network,
+        bit_count=num_bits, name = 'Bob',input_net=alice_net.network,
         concatenate_key=True, AB=True, training=True
     )
 
     print('Creating Eve net...')
     eve_net = Model(
-        bit_count=num_bits, input_net=alice_net.network,
+        bit_count=num_bits, name = 'Eve',input_net=alice_net.network,
         AB=False, training=True
     )
 
