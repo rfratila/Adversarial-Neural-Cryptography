@@ -108,10 +108,7 @@ class Model:
                 trainable=self.trainable
             )
 
-            self.output = tf.sign(
-                tf.sign(self.conv4) + tf.ones_like(self.conv4) / 10)
-
-            return self.output
+            return self.conv4
     def get_output(self, sess, encoder_net, train_X, keys):
         '''
         Will return the output of the network given some input as a numpy array
@@ -132,13 +129,17 @@ class Model:
                 encoder_net.input_layer: train_X,
                 encoder_net.con_key: keys
             }
-        return sess.run(self.network, feed_dict=feed_dict)
+
+        self.output = tf.sign(
+                tf.sign(self.conv4) + tf.ones_like(self.conv4) / 10)
+
+        return sess.run(self.output, feed_dict=feed_dict)
 
 
 def main():
     num_bits = 16
     batch = 512
-    max_iter = 10
+    max_iter = 2000
 
     data_collected = OrderedDict(iteration=[],eve_error=[],bob_error=[])
 
@@ -208,9 +209,10 @@ def main():
         bob_out = bob_net.get_output(sess=sess, encoder_net = alice_net, train_X=train_X, keys = keys)
         '''
      
-        for i in range(0, 90):
+        for i in range(0, 50):
             print('\nIteration:', i)
             start_time = time.time()
+
             print("\tTraining Alice and Bob for {} iterations...".format(max_iter))
             for j in range(0,max_iter):
                 feed_dict_AB = {
@@ -221,9 +223,11 @@ def main():
                 }
 
                 sess.run(train_AB, feed_dict=feed_dict_AB)
+                
                 messages = get_plain_text(N=num_bits, to_generate=batch)
                 train_X = np.expand_dims(messages, axis=2)
-            
+                
+
             print("\tTraining eve for {} iterations...".format(max_iter))
             for j in range(0,max_iter):
                 feed_dict_E = {
@@ -236,6 +240,7 @@ def main():
                 messages = get_plain_text(N=num_bits, to_generate=batch)
                 train_X = np.expand_dims(messages, axis=2)
 
+
             eve_error = sess.run(eve_loss, feed_dict=feed_dict_E)
             bob_error = sess.run(bob_reconst, feed_dict=feed_dict_AB)
             
@@ -246,13 +251,13 @@ def main():
 
             # get more messages
             
-
+        
         save_session(sess,'A_newB_E_90')
     
     with open('bob_and_eve2.pickle','wb') as output:
         pickle.dump(data_collected,output)
-    
     import pudb; pu.db
+    
 
 
 if __name__ == "__main__":
