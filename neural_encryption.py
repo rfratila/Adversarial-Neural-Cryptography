@@ -4,7 +4,6 @@ from datagen import get_plain_text
 from session_manager import save_session
 from session_manager import load_session
 import numpy as np
-from collections import OrderedDict
 import pickle
 import time
 
@@ -141,7 +140,7 @@ def main():
     batch = 512
     max_iter = 2000
 
-    data_collected = OrderedDict(iteration=[],eve_error=[],bob_error=[])
+    data_collected = dict(iteration=[],eve_error=[],bob_error=[])
 
     print('Generating random plaintexts and key...')
     messages = get_plain_text(N=num_bits, to_generate=batch)
