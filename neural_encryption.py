@@ -138,9 +138,10 @@ class Model:
 def main():
     num_bits = 16            #bit size of message to encode and decode
     batch = 512              #how many messages to transmit
-    max_iter = 200           #Specify how many training cycles each agent should train independently
-    replace_messages = False  #If new messages should be used each training cycle
-    display_graph = True
+    adv_iter = 360           #Specify how many adversarial training cycles there should be
+    max_iter = 1000           #Specify how many training cycles each agent should train independently
+    replace_messages = True  #If new messages should be used each training cycle
+    display_graph = True     #Display live training errors
 
     data_collected = dict(iteration=[],eve_error=[],bob_error=[])
 
@@ -210,8 +211,8 @@ def main():
         bob_out = bob_net.get_output(sess=sess, encoder_net = alice_net, train_X=train_X, keys = keys)
         '''
      
-        for i in range(0, 360):
-            print('\nIteration:', i)
+        for i in range(0, adv_iter):
+            print('\nAdversarial iteration:', i)
             start_time = time.time()
 
             print("\tTraining Alice and Bob for {} iterations...".format(max_iter))
@@ -260,6 +261,10 @@ def main():
                     print('\tGenerating new random plaintexts and keys...')
                     messages = get_plain_text(N=num_bits, to_generate=batch)
                     train_X = np.expand_dims(messages, axis=2)
+
+                    #Use to generate new keys
+                    AB_key = get_key(N=num_bits, batch=batch)
+                    keys = np.expand_dims(AB_key, axis=2)
 
             # get more messages
             
