@@ -136,9 +136,11 @@ class Model:
 
 
 def main():
-    num_bits = 16
-    batch = 512
-    max_iter = 2000
+    num_bits = 16            #bit size of message to encode and decode
+    batch = 512              #how many messages to transmit
+    max_iter = 200           #Specify how many training cycles each agent should train independently
+    replace_messages = False  #If new messages should be used each training cycle
+    display_graph = True
 
     data_collected = dict(iteration=[],eve_error=[],bob_error=[])
 
@@ -190,11 +192,11 @@ def main():
         tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, "Bob") 
     )
 
-    train_AB = tf.train.AdamOptimizer(learning_rate=0.0008).minimize(
+    train_AB = tf.train.AdamOptimizer(learning_rate=0.001).minimize(
         bob_loss, var_list=AB_vars) #paper learning rate = 0.0008
 
     E_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, "Eve")
-    train_eve = tf.train.AdamOptimizer(learning_rate=0.0008).minimize(
+    train_eve = tf.train.AdamOptimizer(learning_rate=0.001).minimize(
         eve_loss, var_list=E_vars) #paper learning rate = 0.0008
 
     with tf.Session() as sess:
@@ -223,10 +225,6 @@ def main():
 
                 sess.run(train_AB, feed_dict=feed_dict_AB)
                 
-                messages = get_plain_text(N=num_bits, to_generate=batch)
-                train_X = np.expand_dims(messages, axis=2)
-                
-
             print("\tTraining eve for {} iterations...".format(max_iter))
             for j in range(0,max_iter):
                 feed_dict_E = {
@@ -236,17 +234,32 @@ def main():
                 }
 
                 sess.run(train_eve, feed_dict=feed_dict_E)
-                messages = get_plain_text(N=num_bits, to_generate=batch)
-                train_X = np.expand_dims(messages, axis=2)
-
 
             eve_error = sess.run(eve_loss, feed_dict=feed_dict_E)
             bob_error = sess.run(bob_reconst, feed_dict=feed_dict_AB)
-            
+
             print("\tEve recon error: {0:.4f} | Bob recon error: {1:.4f} | Time taken: {2:.2f}s".format(eve_error, bob_error, time.time() - start_time))
             data_collected['iteration'].append(i)
             data_collected['eve_error'].append(eve_error)
             data_collected['bob_error'].append(bob_error)
+
+
+            if display_graph:
+                import matplotlib.pyplot as plt
+                plt.ion()
+                plt.plot(data_collected['iteration'],data_collected['eve_error'], '-ro',label='Eve Error' if i == 0 else '')
+                plt.plot(data_collected['iteration'],data_collected['bob_error'],'-go',label='Bob Error' if i==0 else '')
+                plt.xlabel("iteration")
+                plt.ylabel("Error")
+                plt.title("Bob and eve training")
+                plt.legend(loc='upper right')
+                plt.pause(0.05)
+                plt.draw()#enter param False if running in iterative mode
+                
+            if replace_messages:
+                    print('\tGenerating new random plaintexts and keys...')
+                    messages = get_plain_text(N=num_bits, to_generate=batch)
+                    train_X = np.expand_dims(messages, axis=2)
 
             # get more messages
             
