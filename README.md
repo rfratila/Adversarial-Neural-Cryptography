@@ -9,13 +9,13 @@ Matplotlib
 pudb
 ```
 
-##Running the script
+## Running the script
 In order to start training the agents: Alice, Bob and Eve run:
 ```
 python3 neural_encryption.py
 ```
 
-##To visualize the training graph post-training run:
+## To visualize the training graph post-training run:
 ```
 python3 view_training.py /path/to/file.pickle
 ```
