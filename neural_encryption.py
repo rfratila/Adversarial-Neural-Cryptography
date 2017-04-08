@@ -138,8 +138,8 @@ class Model:
 def main():
     num_bits = 16            #bit size of message to encode and decode
     batch = 512              #how many messages to transmit
-    adv_iter = 360           #Specify how many adversarial training cycles there should be
-    max_iter = 1000           #Specify how many training cycles each agent should train independently
+    adv_iter = 100           #Specify how many adversarial training cycles there should be
+    max_iter = 2000           #Specify how many training cycles each agent should train independently
     replace_messages = True  #If new messages should be used each training cycle
     display_graph = True     #Display live training errors
 
@@ -186,6 +186,7 @@ def main():
     )
 
     bob_loss = bob_reconst + bob_eve  # not explicitly mentioned in the paper
+    #bob_loss = bob_reconst + (1. - eve_loss) ** 2 # from the web
     #total_loss = bob_reconst - eve_loss
 
     AB_vars = (
