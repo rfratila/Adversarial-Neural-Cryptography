@@ -1,11 +1,11 @@
 # Adversarial-Neural-Cryptography
-An implementation of the ICLR 2017 paper 'Learning to Protect Communications with Adversarial Neural Cryptography'
+An implementation of the ICLR 2017 paper 'Learning to Protect Communications
+with Adversarial Neural Cryptography'.
 
 ## Dependencies
-```
-tensorflow
-numpy
-matplotlib
+Simply run:
+```bash
+pip install -r requirements.txt
 ```
 
 ## Running the script
