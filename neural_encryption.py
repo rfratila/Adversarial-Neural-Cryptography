@@ -26,7 +26,8 @@ if __name__ == "__main__":
     alice_output, bob_output, eve_output = build_network(msg, key)
 
     eve_loss = reconstruction_loss(msg, eve_output)
-    bob_loss = reconstruction_loss(msg, bob_output) + (0.5 - eve_loss) ** 2
+    bob_reconst_loss = reconstruction_loss(msg, bob_output)
+    bob_loss = bob_reconst_loss + (0.5 - eve_loss) ** 2
 
     AB_vars = (
         tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, "alice") +
@@ -43,6 +44,7 @@ if __name__ == "__main__":
 
     writer = tf.summary.FileWriter("logs/{}".format(datetime.datetime.now()))
     tf.summary.scalar("eve_error", eve_loss)
+    tf.summary.scalar("bob_reconst_error", bob_reconst_loss)
     tf.summary.scalar("bob_error", bob_loss)
     merged_summary = tf.summary.merge_all()
 
