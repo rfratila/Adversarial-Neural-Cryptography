@@ -63,8 +63,8 @@ if __name__ == "__main__":
             for j in range(max_iter):
                 sess.run(trainAB, feed_dict=feed_dict)
 
-            print("\tTraining Eve for {} iterations...".format(max_iter))
-            for j in range(max_iter):
+            print("\tTraining Eve for {} iterations...".format(2 * max_iter))
+            for j in range(2 * max_iter):
                 sess.run(trainAB, feed_dict=feed_dict)
 
             results = [eve_loss, bob_loss, merged_summary]
