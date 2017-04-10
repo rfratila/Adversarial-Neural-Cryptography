@@ -1,11 +1,13 @@
-"""Utility functions to load and save a tf session
-"""
+# -*- coding: utf-8 -*-
+
+"""Utility functions to load and save a tf session."""
+
 import os
 import tensorflow as tf
 
 
 def save_session(session, model_name):
-    """Save a session
+    """Saves a session.
 
     Args:
         session: TensorFlow session
@@ -21,7 +23,7 @@ def save_session(session, model_name):
 
 
 def load_session(session, model_name):
-    """Load session weights.
+    """Loads session weights.
 
     Note: you must first initialize the session
     and create all the variables and layers.

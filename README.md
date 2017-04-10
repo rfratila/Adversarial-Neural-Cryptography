@@ -3,19 +3,18 @@ An implementation of the ICLR 2017 paper 'Learning to Protect Communications wit
 
 ## Dependencies
 ```
-Tensorflow
-Numpy
-Matplotlib
-pudb
+tensorflow
+numpy
+matplotlib
 ```
 
 ## Running the script
 In order to start training the agents: Alice, Bob and Eve run:
-```
+```bash
 python3 neural_encryption.py
 ```
 
-## To visualize the training graph post-training run:
-```
-python3 view_training.py /path/to/file.pickle
+## To visualize the training graph during the run:
+```bash
+tensorboard --logdir logs
 ```
