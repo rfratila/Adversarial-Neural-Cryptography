@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import time
+import datetime
 import tensorflow as tf
 from datagen import get_random_block
 from session_manager import save_session
@@ -40,7 +41,7 @@ if __name__ == "__main__":
     trainE = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(
         eve_loss, var_list=E_vars)
 
-    writer = tf.summary.FileWriter("logs")
+    writer = tf.summary.FileWriter("logs/{}".format(datetime.datetime.now()))
     tf.summary.scalar("eve_error", eve_loss)
     tf.summary.scalar("bob_error", bob_loss)
     merged_summary = tf.summary.merge_all()
