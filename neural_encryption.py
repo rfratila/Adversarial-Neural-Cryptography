@@ -13,6 +13,11 @@ def reconstruction_loss(msg, output):
     return tf.reduce_mean(tf.abs(tf.subtract(msg, output))) / 2
 
 
+def bits_loss(msg, output, message_length):
+    """Autoencoder error in number of different bits."""
+    return reconstruction_loss(msg, output) * message_length
+
+
 message_length = 16  # in bits
 key_length = message_length  # in bits
 batch = 512  # Number of messages to train on at once
@@ -28,6 +33,9 @@ if __name__ == "__main__":
     eve_loss = reconstruction_loss(msg, eve_output)
     bob_reconst_loss = reconstruction_loss(msg, bob_output)
     bob_loss = bob_reconst_loss + (0.5 - eve_loss) ** 2
+
+    eve_bit_loss = bits_loss(msg, eve_output, message_length)
+    bob_bit_loss = bits_loss(msg, bob_output, message_length)
 
     AB_vars = (
         tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, "alice") +
@@ -46,6 +54,8 @@ if __name__ == "__main__":
     tf.summary.scalar("eve_error", eve_loss)
     tf.summary.scalar("bob_reconst_error", bob_reconst_loss)
     tf.summary.scalar("bob_error", bob_loss)
+    tf.summary.scalar("eve_bit_error", eve_bit_loss)
+    tf.summary.scalar("bob_bit_error", bob_bit_loss)
     merged_summary = tf.summary.merge_all()
 
     with tf.Session() as sess:
