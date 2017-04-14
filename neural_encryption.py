@@ -22,7 +22,7 @@ message_length = 16  # in bits
 key_length = message_length  # in bits
 batch = 4096  # Number of messages to train on at once
 adv_iter = 120  # Adversarial iterations
-max_iter = 20  # Individual agent iterations
+max_iter = 200  # Individual agent iterations
 learning_rate = 0.0008
 
 
@@ -30,7 +30,7 @@ if __name__ == "__main__":
     msg, key = build_input_layers(message_length, key_length)
     alice_output, bob_output, eve_output = build_network(msg, key)
 
-    
+
     eve_loss = reconstruction_loss(msg, eve_output)
     bob_reconst_loss = reconstruction_loss(msg, bob_output)
     bob_loss = bob_reconst_loss + (0.5 - eve_loss) ** 2
@@ -46,7 +46,7 @@ if __name__ == "__main__":
     E_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, "eve")
 
     trainAB = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(
-        bob_reconst_loss, var_list=AB_vars)
+        bob_loss, var_list=AB_vars)
 
     trainE = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(
         eve_loss, var_list=E_vars)
@@ -78,7 +78,7 @@ if __name__ == "__main__":
 
             print("\tTraining Eve for {} iterations...".format(2 * max_iter))
             for j in range(2 * max_iter):
-                sess.run(trainAB, feed_dict=feed_dict)
+                sess.run(trainE, feed_dict=feed_dict)
 
             results = [eve_loss, bob_loss, merged_summary]
             eve_error, bob_error, summary = sess.run(results,
