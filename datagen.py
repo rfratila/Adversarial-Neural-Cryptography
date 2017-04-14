@@ -11,4 +11,4 @@ def get_random_block(N=16, batch=256):
     Returns:
         Batch of random blocks.
     """
-    return 2 * np.random.randint(2, size=(batch, N, 1)) - 1
+    return 2 * np.random.randint(2, size=(batch, N)) - 1

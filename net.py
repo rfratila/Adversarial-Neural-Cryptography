@@ -37,9 +37,9 @@ def _network(input_layer, name, message_length, strides):
 
 
 def build_input_layers(message_length, key_length):
-    msg = tf.placeholder(dtype=tf.float32, shape=(None, message_length, 1),
+    msg = tf.placeholder(dtype=tf.float32, shape=(None, message_length),
                          name="message")
-    key = tf.placeholder(dtype=tf.float32, shape=(None, key_length, 1),
+    key = tf.placeholder(dtype=tf.float32, shape=(None, key_length),
                          name="key")
     return msg, key
 
