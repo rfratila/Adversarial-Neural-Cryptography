@@ -29,7 +29,7 @@ def _network(input_layer, name, message_length, strides):
             activation=tf.nn.sigmoid)
         hidden_layer_2 = tf.layers.dense(
             inputs=hidden_layer,
-            units=1,
+            units=message_length,
             activation=tf.nn.tanh)
         output_layer = hidden_layer_2 #_conv_layers(hidden_layer, strides)
 
@@ -48,7 +48,7 @@ def build_network(msg, key):
     alice_bob_strides = [1, 2, 1, 1]
     eve_strides = [1, 1, 1, 1]
     message_length = int(msg.shape[1])
-    import pudb; pu.db
+
     alice_input = tf.concat([msg, key], axis=1)
     alice_output = _network(alice_input, "alice", message_length,
                             alice_bob_strides)
