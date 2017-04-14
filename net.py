@@ -31,6 +31,7 @@ def _network(input_layer, name, message_length, strides):
             inputs=hidden_layer,
             units=message_length,
             activation=tf.nn.tanh)
+        
         output_layer = hidden_layer_2 #_conv_layers(hidden_layer, strides)
 
     return output_layer
