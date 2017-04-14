@@ -20,8 +20,8 @@ def bits_loss(msg, output, message_length):
 
 message_length = 16  # in bits
 key_length = message_length  # in bits
-batch = 512  # Number of messages to train on at once
-adv_iter = 100  # Adversarial iterations
+batch = 4096  # Number of messages to train on at once
+adv_iter = 120  # Adversarial iterations
 max_iter = 20  # Individual agent iterations
 learning_rate = 0.0008
 
@@ -30,6 +30,7 @@ if __name__ == "__main__":
     msg, key = build_input_layers(message_length, key_length)
     alice_output, bob_output, eve_output = build_network(msg, key)
 
+    
     eve_loss = reconstruction_loss(msg, eve_output)
     bob_reconst_loss = reconstruction_loss(msg, bob_output)
     bob_loss = bob_reconst_loss + (0.5 - eve_loss) ** 2
@@ -45,7 +46,7 @@ if __name__ == "__main__":
     E_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, "eve")
 
     trainAB = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(
-        bob_loss, var_list=AB_vars)
+        bob_reconst_loss, var_list=AB_vars)
 
     trainE = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(
         eve_loss, var_list=E_vars)
@@ -87,5 +88,5 @@ if __name__ == "__main__":
 
             print("\tEve error: {:.4f} | Bob error: {:.4f} | Time: {:.2f}s"
                   .format(eve_error, bob_error, time.time() - start_time))
-
+        import pudb; pu.db
         save_session(sess, "alice_bob")
