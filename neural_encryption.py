@@ -3,7 +3,7 @@
 import time
 import datetime
 import tensorflow as tf
-from datagen import get_random_block
+from datagen import get_random_block, get_constant_block
 from session_manager import save_session
 from net import build_input_layers, build_network
 
@@ -21,10 +21,10 @@ def bits_loss(msg, output, message_length):
 message_length = 16  # in bits
 key_length = message_length  # in bits
 batch = 4096  # Number of messages to train on at once
-adv_iter = 2000# Adversarial iterations
+adv_iter = 1000  # Adversarial iterations
 max_iter = 200  # Individual agent iterations
 learning_rate = 0.0008
-percent_of_time_to_train_AliceBob = 1.0
+percent_of_time_to_train_AliceBob = 0.2
 
 
 if __name__ == "__main__":
@@ -52,13 +52,15 @@ if __name__ == "__main__":
     trainE = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(
         eve_loss, var_list=E_vars)
 
-    writer = tf.summary.FileWriter("logs/{}".format(datetime.datetime.now()))
+    writer = tf.summary.FileWriter("logs/{}".format(datetime.datetime.now()).replace(":", "_"))
     tf.summary.scalar("eve_error", eve_loss)
     tf.summary.scalar("bob_reconst_error", bob_reconst_loss)
     tf.summary.scalar("bob_error", bob_loss)
     tf.summary.scalar("eve_bit_error", eve_bit_loss)
     tf.summary.scalar("bob_bit_error", bob_bit_loss)
     merged_summary = tf.summary.merge_all()
+
+    constant_keys = get_constant_block(key_length, batch)
 
     with tf.Session() as sess:
         tf.global_variables_initializer().run()
@@ -67,10 +69,17 @@ if __name__ == "__main__":
         for i in range(adv_iter):
             print("\nIteration:", i)
             start_time = time.time()
-            feed_dict = {
-                msg: get_random_block(message_length, batch),
-                key: get_random_block(key_length, batch)
-            }
+
+            if (i < percent_of_time_to_train_AliceBob * adv_iter):
+                feed_dict = {
+                    msg: get_random_block(message_length, batch),
+                    key: get_random_block(key_length, batch)
+                }
+            else:
+                feed_dict = {
+                    msg: get_random_block(message_length, batch),
+                    key: constant_keys
+                }
 
             if (i < percent_of_time_to_train_AliceBob * adv_iter):
                 print("\tTraining Alice and Bob for {} iterations..."
