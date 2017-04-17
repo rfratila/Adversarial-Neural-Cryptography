@@ -59,13 +59,13 @@ if __name__ == "__main__":
         eve_loss, var_list=E_vars)
 
     trainE_orig = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(
-        eve_loss, var_list=E_vars)
+        eve_orig_loss, var_list=E_vars)
 
     trainE_conv = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(
-        eve_loss, var_list=E_vars)
+        eve_conv_loss, var_list=E_vars)
 
     trainE_large = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(
-        eve_loss, var_list=E_vars)
+        eve_large_loss, var_list=E_vars)
 
     writer = tf.summary.FileWriter("logs/{}".format(datetime.datetime.now()))
     tf.summary.scalar("eve_error", eve_loss)
