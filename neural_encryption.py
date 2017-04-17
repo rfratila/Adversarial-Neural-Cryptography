@@ -77,7 +77,7 @@ if __name__ == "__main__":
 
     with tf.Session() as sess:
         tf.global_variables_initializer().run()
-        import pudb; pu.db
+        #import pudb; pu.db
         writer.add_graph(sess.graph)
 
         for i in range(adv_iter):
@@ -95,7 +95,7 @@ if __name__ == "__main__":
 
             print("\tTraining Eve for {} iterations...".format(2 * max_iter))
             for j in range(2 * max_iter):
-                sess.run(trainAB, feed_dict=feed_dict)
+                sess.run(trainE, feed_dict=feed_dict)
 
             results = [eve_loss, bob_loss, merged_summary]
             eve_error, bob_error, summary = sess.run(results,
