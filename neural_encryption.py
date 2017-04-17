@@ -21,9 +21,10 @@ def bits_loss(msg, output, message_length):
 message_length = 16  # in bits
 key_length = message_length  # in bits
 batch = 4096  # Number of messages to train on at once
-adv_iter = 120  # Adversarial iterations
+adv_iter = 2000# Adversarial iterations
 max_iter = 200  # Individual agent iterations
 learning_rate = 0.0008
+percent_of_time_to_train_AliceBob = 1.0
 
 
 if __name__ == "__main__":
@@ -71,10 +72,11 @@ if __name__ == "__main__":
                 key: get_random_block(key_length, batch)
             }
 
-            print("\tTraining Alice and Bob for {} iterations..."
-                  .format(max_iter))
-            for j in range(max_iter):
-                sess.run(trainAB, feed_dict=feed_dict)
+            if (i < percent_of_time_to_train_AliceBob * adv_iter):
+                print("\tTraining Alice and Bob for {} iterations..."
+                      .format(max_iter))
+                for j in range(max_iter):
+                    sess.run(trainAB, feed_dict=feed_dict)
 
             print("\tTraining Eve for {} iterations...".format(2 * max_iter))
             for j in range(2 * max_iter):
@@ -88,5 +90,5 @@ if __name__ == "__main__":
 
             print("\tEve error: {:.4f} | Bob error: {:.4f} | Time: {:.2f}s"
                   .format(eve_error, bob_error, time.time() - start_time))
-        import pudb; pu.db
-        save_session(sess, "alice_bob")
+        #import pudb; pu.db
+        save_session(sess, "alice_bob_eve")
