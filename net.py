@@ -23,7 +23,6 @@ def _conv_layers(input_layer, strides):
 
 def _network(input_layer, name, message_length, strides):
     with tf.variable_scope(name):
-        import pudb; pu.db
         hidden_layer = tf.layers.dense(
             inputs=input_layer,
             units=2 * message_length,
@@ -39,8 +38,9 @@ def _network(input_layer, name, message_length, strides):
 
 def _eve_orig_network(input_layer, name, message_length,strides):
     with tf.variable_scope(name):
+        expand_in = tf.expand_dims(input_layer,2)
         hidden_layer = tf.layers.dense(
-            inputs=input_layer,
+            inputs=expand_in,
             units=2 * message_length,
             activation=tf.nn.sigmoid)
         output_layer = _conv_layers(hidden_layer, strides)
@@ -49,12 +49,14 @@ def _eve_orig_network(input_layer, name, message_length,strides):
 def _eve_conv_network(input_layer, name, message_length, strides):
 
     with tf.variable_scope(name):
-        output_layer = _conv_layers(input_layer, strides)
+        expand_in = tf.expand_dims(input_layer,2)
+        output_layer = _conv_layers(expand_in, strides)
     return output_layer
 
 def _eve_large_network(input_layer, name, message_length, strides):
     with tf.variable_scope(name):
-        c1 = _conv1d(input_layer, 2, strides[0], [4], tf.nn.sigmoid)
+        expand_in = tf.expand_dims(input_layer,2)
+        c1 = _conv1d(expand_in, 2, strides[0], [4], tf.nn.sigmoid)
         c2 = _conv1d(c1, 4, strides[1], [2], tf.nn.sigmoid)
         c3 = _conv1d(c2, 4, strides[2], [2], tf.nn.sigmoid)
         c4 = _conv1d(c3, 4, strides[2], [2], tf.nn.sigmoid)
@@ -68,9 +70,9 @@ def _eve_large_network(input_layer, name, message_length, strides):
 
 
 def build_input_layers(message_length, key_length):
-    msg = tf.placeholder(dtype=tf.float32, shape=(None, message_length, 1),
+    msg = tf.placeholder(dtype=tf.float32, shape=(None, message_length),
                          name="message")
-    key = tf.placeholder(dtype=tf.float32, shape=(None, key_length, 1),
+    key = tf.placeholder(dtype=tf.float32, shape=(None, key_length),
                          name="key")
     return msg, key
 

@@ -4,7 +4,7 @@ import time
 import datetime
 import tensorflow as tf
 from datagen import get_random_block
-from session_manager import save_session
+from session_manager import save_session, load_session
 from net import build_input_layers, build_network
 
 
@@ -30,8 +30,12 @@ if __name__ == "__main__":
     msg, key = build_input_layers(message_length, key_length)
     alice_output, bob_output, eve_output, eve_orig_output, \
         eve_conv_output, eve_large_output = build_network(msg, key)
-    import pudb; pu.db
+    
     eve_loss = reconstruction_loss(msg, eve_output)
+    eve_orig_loss = reconstruction_loss(msg, eve_orig_output)
+    eve_conv_loss = reconstruction_loss(msg, eve_conv_output)
+    eve_large_loss = reconstruction_loss(msg, eve_large_output)
+
     bob_reconst_loss = reconstruction_loss(msg, bob_output)
     bob_loss = bob_reconst_loss + (0.5 - eve_loss) ** 2
 
@@ -44,11 +48,23 @@ if __name__ == "__main__":
     )
 
     E_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, "eve")
+    E_orig_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, "eve_orig")
+    E_conv_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, "eve_conv")
+    E_large_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, "eve_large")
 
     trainAB = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(
         bob_loss, var_list=AB_vars)
 
     trainE = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(
+        eve_loss, var_list=E_vars)
+
+    trainE_orig = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(
+        eve_loss, var_list=E_vars)
+
+    trainE_conv = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(
+        eve_loss, var_list=E_vars)
+
+    trainE_large = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(
         eve_loss, var_list=E_vars)
 
     writer = tf.summary.FileWriter("logs/{}".format(datetime.datetime.now()))
@@ -61,6 +77,7 @@ if __name__ == "__main__":
 
     with tf.Session() as sess:
         tf.global_variables_initializer().run()
+        import pudb; pu.db
         writer.add_graph(sess.graph)
 
         for i in range(adv_iter):
