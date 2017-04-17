@@ -20,7 +20,7 @@ def bits_loss(msg, output, message_length):
 
 message_length = 16  # in bits
 key_length = message_length  # in bits
-batch = 512  # Number of messages to train on at once
+batch = 4096  # Number of messages to train on at once
 adv_iter = 100  # Adversarial iterations
 max_iter = 20  # Individual agent iterations
 learning_rate = 0.0008
@@ -59,13 +59,13 @@ if __name__ == "__main__":
         eve_loss, var_list=E_vars)
 
     trainE_orig = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(
-        eve_orig_loss, var_list=E_vars)
+        eve_orig_loss, var_list=E_orig_vars)
 
     trainE_conv = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(
-        eve_conv_loss, var_list=E_vars)
+        eve_conv_loss, var_list=E_conv_vars)
 
     trainE_large = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(
-        eve_large_loss, var_list=E_vars)
+        eve_large_loss, var_list=E_large_vars)
 
     writer = tf.summary.FileWriter("logs/{}".format(datetime.datetime.now()))
     tf.summary.scalar("eve_error", eve_loss)
