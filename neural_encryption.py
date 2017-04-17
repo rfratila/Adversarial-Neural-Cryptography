@@ -28,8 +28,9 @@ learning_rate = 0.0008
 
 if __name__ == "__main__":
     msg, key = build_input_layers(message_length, key_length)
-    alice_output, bob_output, eve_output = build_network(msg, key)
-
+    alice_output, bob_output, eve_output, eve_orig_output, \
+        eve_conv_output, eve_large_output = build_network(msg, key)
+    import pudb; pu.db
     eve_loss = reconstruction_loss(msg, eve_output)
     bob_reconst_loss = reconstruction_loss(msg, bob_output)
     bob_loss = bob_reconst_loss + (0.5 - eve_loss) ** 2
