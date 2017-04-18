@@ -36,6 +36,33 @@ def _network(input_layer, name, message_length, strides):
 
     return output_layer
 
+def _eve_dense_network(input_layer, name, message_length, strides):
+    with tf.variable_scope(name):
+        hidden_layer = tf.layers.dense(
+            inputs=input_layer,
+            units=2 * message_length,
+            activation=tf.nn.sigmoid)
+        hidden_layer_2 = tf.layers.dense(
+            inputs=hidden_layer,
+            units=2 * message_length,
+            activation=tf.nn.sigmoid)
+        hidden_layer_3 = tf.layers.dense(
+            inputs=hidden_layer_2,
+            units=2 * message_length,
+            activation=tf.nn.sigmoid)
+        hidden_layer_4 = tf.layers.dense(
+            inputs=hidden_layer_3,
+            units=2 * message_length,
+            activation=tf.nn.sigmoid)
+        hidden_layer_5 = tf.layers.dense(
+            inputs=hidden_layer_4,
+            units=message_length,
+            activation=tf.nn.tanh)
+        
+        output_layer = hidden_layer_5 #_conv_layers(hidden_layer, strides)
+
+    return output_layer
+
 def _eve_orig_network(input_layer, name, message_length,strides):
     with tf.variable_scope(name):
         expand_in = tf.expand_dims(input_layer,2)
@@ -44,14 +71,14 @@ def _eve_orig_network(input_layer, name, message_length,strides):
             units=2 * message_length,
             activation=tf.nn.sigmoid)
         output_layer = _conv_layers(hidden_layer, strides)
-    return output_layer
+    return tf.reshape(output_layer, [4096,message_length])
 
 def _eve_conv_network(input_layer, name, message_length, strides):
 
     with tf.variable_scope(name):
         expand_in = tf.expand_dims(input_layer,2)
         output_layer = _conv_layers(expand_in, strides)
-    return output_layer
+    return tf.reshape(output_layer, [4096,message_length])
 
 def _eve_large_network(input_layer, name, message_length, strides):
     with tf.variable_scope(name):
@@ -66,7 +93,7 @@ def _eve_large_network(input_layer, name, message_length, strides):
         c8 = _conv1d(c7, 4, strides[2], [2], tf.nn.sigmoid)
         c9 = _conv1d(c8, 4, strides[2], [1], tf.nn.sigmoid)
         c10 = _conv1d(c9, 1, strides[3], [1], tf.tanh)
-    return c10
+    return tf.reshape(c10, [4096,message_length])
 
 
 def build_input_layers(message_length, key_length):
@@ -102,5 +129,8 @@ def build_network(msg, key):
     eve_large_output = _eve_large_network(alice_output, "eve_large", message_length,
                                         eve_strides)
 
+    eve_dense_output = _eve_dense_network(alice_output, "eve_dense", message_length,
+                                        eve_strides)
+
     return alice_output, bob_output, eve_output, eve_orig_output, \
-            eve_conv_output, eve_large_output
+            eve_conv_output, eve_large_output, eve_dense_output
