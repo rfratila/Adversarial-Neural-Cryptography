@@ -14,9 +14,9 @@ def _conv1d(input_layer, filter_size, strides, kernel_size, activation):
 
 
 def _conv_layers(input_layer, strides):
-    c1 = _conv1d(input_layer, 2, strides[0], [4], tf.nn.relu)
-    c2 = _conv1d(c1, 4, strides[1], [2], tf.nn.relu)
-    c3 = _conv1d(c2, 4, strides[2], [1], tf.nn.relu)
+    c1 = _conv1d(input_layer, 2, strides[0], [4], tf.nn.sigmoid)
+    c2 = _conv1d(c1, 4, strides[1], [2], tf.nn.sigmoid)
+    c3 = _conv1d(c2, 4, strides[2], [1], tf.nn.sigmoid)
     c4 = _conv1d(c3, 1, strides[3], [1], tf.tanh)
     return c4
 
@@ -26,7 +26,7 @@ def _network(input_layer, name, message_length, strides):
         hidden_layer = tf.layers.dense(
             inputs=input_layer,
             units=2 * message_length,
-            activation=tf.nn.relu)
+            activation=tf.nn.sigmoid)
         output_layer = _conv_layers(hidden_layer, strides)
 
     return output_layer
